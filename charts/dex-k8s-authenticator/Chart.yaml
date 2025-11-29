@@ -1,10 +1,19 @@
-apiVersion: v1
-appVersion: "v1.4.0"
-description: "Authenticator for using Dex with Kubernetes"
+apiVersion: v2
+appVersion: "2.0.0"
+description: "Web UI to generate kubeconfig files using Dex OIDC provider for Kubernetes authentication"
 name: dex-k8s-authenticator
-version: 1.4.0
+version: 2.0.0
+type: application
+keywords:
+  - kubernetes
+  - authentication
+  - dex
+  - oidc
+  - kubeconfig
+home: https://github.com/wowsel/dex-k8s-authenticator
 sources:
-- https://github.com/mintel/dex-k8s-authenticator
+  - https://github.com/wowsel/dex-k8s-authenticator
 maintainers:
-- name: Nick Badger
-  email: nbadger@mintel.com
+  - name: wowsel
+    url: https://github.com/wowsel
+icon: https://raw.githubusercontent.com/dexidp/dex/master/Documentation/logos/dex-horizontal-color.png

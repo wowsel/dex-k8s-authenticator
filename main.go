@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -19,7 +18,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,6 +31,33 @@ var (
 
 type debugTransport struct {
 	t http.RoundTripper
+}
+
+// securityHeaders wraps an http.Handler to add security headers
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Security headers
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;")
+		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// securityHeadersFunc wraps an http.HandlerFunc to add security headers
+func securityHeadersFunc(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;")
+		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+		next(w, r)
+	}
 }
 
 func (d debugTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -139,7 +165,7 @@ func start_app(config Config) {
 	}
 	// Load CA certs from file
 	if config.Trusted_Root_Ca_File != "" {
-		content, err := ioutil.ReadFile(config.Trusted_Root_Ca_File)
+		content, err := os.ReadFile(config.Trusted_Root_Ca_File)
 		if err != nil {
 			log.Fatalf("Failed to read file Trusted Root CA %s, %v", config.Trusted_Root_Ca_File, err)
 		}
@@ -153,19 +179,17 @@ func start_app(config Config) {
 		MinVersion: tls.VersionTLS12, // minimum TLS 1.2
 		// P curve order does not matter, as breaking one means all others can be brute-forced as well:
 		// Golang developers prefer:
-		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384, tls.CurveP521},
-		PreferServerCipherSuites: true, // Server chooses ciphersuite, order matters below:
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384, tls.CurveP521},
+		// Note: PreferServerCipherSuites deprecated in Go 1.17+, removed
+		// TLS 1.3 cipher suites are not configurable (always uses secure defaults)
 		CipherSuites: []uint16{
+			// TLS 1.2 cipher suites
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
-			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-			tls.TLS_CHACHA20_POLY1305_SHA256, // TLS 1.3
-			tls.TLS_AES_256_GCM_SHA384,       // TLS 1.3
-			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_AES_128_GCM_SHA256, // TLS 1.3
 		},
 		RootCAs: certp,
 	}
@@ -241,7 +265,7 @@ func start_app(config Config) {
 		}
 
 		if cluster.K8s_Ca_Pem_File != "" {
-			content, err := ioutil.ReadFile(cluster.K8s_Ca_Pem_File)
+			content, err := os.ReadFile(cluster.K8s_Ca_Pem_File)
 			if err != nil {
 				log.Fatalf("Failed to load CA from file %s, %s", cluster.K8s_Ca_Pem_File, err)
 			}
@@ -266,23 +290,23 @@ func start_app(config Config) {
 		}
 
 		// Each cluster gets a different login and callback URL
-		http.HandleFunc(base_redirect_uri.Path, cluster.handleCallback)
+		http.HandleFunc(base_redirect_uri.Path, securityHeadersFunc(cluster.handleCallback))
 		log.Printf("Registered callback handler at: %s", base_redirect_uri.Path)
 
 		login_uri := path.Join(config.Web_Path_Prefix, "login", cluster.Name)
-		http.HandleFunc(login_uri, cluster.handleLogin)
+		http.HandleFunc(login_uri, securityHeadersFunc(cluster.handleLogin))
 		log.Printf("Registered login handler at: %s", login_uri)
 	}
 
 	// Index page
-	http.HandleFunc(config.Web_Path_Prefix, config.handleIndex)
+	http.HandleFunc(config.Web_Path_Prefix, securityHeadersFunc(config.handleIndex))
 
 	// Serve static html assets
 	fs := http.FileServer(http.Dir("html/static/"))
 	static_uri := path.Join(config.Web_Path_Prefix, "static") + "/"
 	log.Printf("Registered static assets handler at: %s", static_uri)
 
-	http.Handle(static_uri, http.StripPrefix(static_uri, fs))
+	http.Handle(static_uri, securityHeaders(http.StripPrefix(static_uri, fs)))
 
 	// Determine whether to use TLS or not
 	switch listenURL.Scheme {
@@ -393,7 +417,7 @@ func initConfig() {
 		viper.AddConfigPath(path)
 		viper.SetDefault("web_path_prefix", "/")
 
-		config, err := ioutil.ReadFile(config_file)
+		config, err := os.ReadFile(config_file)
 		if err != nil {
 			log.Fatalf("Error reading config file, %s", err)
 		}

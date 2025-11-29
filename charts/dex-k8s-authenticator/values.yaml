@@ -7,9 +7,9 @@ global:
 replicaCount: 1
 
 image:
-  repository: mintel/dex-k8s-authenticator
-  tag: 1.4.0
-  pullPolicy: Always
+  repository: wowsel/dex-k8s-authenticator
+  tag: "2.0.0"
+  pullPolicy: IfNotPresent
 
 imagePullSecrets: {}
 

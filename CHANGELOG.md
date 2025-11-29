@@ -1,6 +1,52 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.0.0] - 2025-11-29
+
+### Breaking Changes
+
+- Upgraded Go from 1.16 to 1.25 (minimum supported version)
+- Migrated from `github.com/coreos/go-oidc` v2 to v3 (import path changed to `github.com/coreos/go-oidc/v3/oidc`)
+
+### Security Fixes
+
+- **CRITICAL**: Fixed hardcoded OAuth state parameter vulnerability (CSRF protection was ineffective)
+  - Implemented cryptographically secure random state generation
+  - Added thread-safe state store with 10-minute TTL
+  - States are now single-use tokens
+- Added HTTP security headers to all responses:
+  - `X-Content-Type-Options: nosniff`
+  - `X-Frame-Options: DENY`
+  - `X-XSS-Protection: 1; mode=block`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Content-Security-Policy`
+  - `Permissions-Policy`
+- Removed deprecated `PreferServerCipherSuites` TLS setting (ignored since Go 1.17)
+- Updated TLS cipher suites to modern secure defaults
+
+### Changed
+
+- **Dockerfile modernization**:
+  - Updated builder image from `golang:1.16.4-alpine3.13` to `golang:1.25-alpine3.22`
+  - Updated runtime image from `alpine:3.13.5` to `alpine:3.22`
+  - Added non-root user (`dex:dex`) for container security
+  - Added health check
+  - Added OCI image labels
+  - Optimized build with `-ldflags="-w -s"` for smaller binary
+  - Named build stages for better multi-stage build clarity
+
+- **Dependencies updated**:
+  - `github.com/coreos/go-oidc` v2.2.1 → `github.com/coreos/go-oidc/v3` v3.11.0
+  - `github.com/spf13/cast` v1.3.1 → v1.7.0
+  - `github.com/spf13/cobra` v1.1.3 → v1.8.1
+  - `github.com/spf13/viper` v1.7.1 → v1.19.0
+  - `golang.org/x/oauth2` 2021 → v0.24.0
+
+### Fixed
+
+- Replaced deprecated `io/ioutil` package with `os` and `io` (deprecated since Go 1.16)
+- Fixed typo in log message: "post-loginto" → "post-login to"
+
 ## [v1.4.0]
 
 ### Changed

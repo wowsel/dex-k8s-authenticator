@@ -2,20 +2,65 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
+	"sync"
 	"time"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
 )
 
-const exampleAppState = "Vgn2lp5QnymFtLntKX5dM8k773PwcM87T4hQtiESC1q8wkUBgw5D3kH0r5qJ"
+// generateState creates a cryptographically secure random state string
+// to protect against CSRF attacks
+func generateState() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to a default state if crypto/rand fails (should never happen)
+		return "Vgn2lp5QnymFtLntKX5dM8k773PwcM87T4hQtiESC1q8wkUBgw5D3kH0r5qJ"
+	}
+	return hex.EncodeToString(b)
+}
+
+// stateStore holds the state for CSRF protection with thread-safe access
+// In production, consider using a distributed cache like Redis
+var (
+	stateStore = make(map[string]time.Time)
+	stateMu    sync.RWMutex
+	stateTTL   = 10 * time.Minute
+)
+
+// saveState stores a state value with expiration
+func saveState(state string) {
+	stateMu.Lock()
+	defer stateMu.Unlock()
+	stateStore[state] = time.Now().Add(stateTTL)
+	// Cleanup expired states
+	for s, exp := range stateStore {
+		if time.Now().After(exp) {
+			delete(stateStore, s)
+		}
+	}
+}
+
+// validateState checks if a state is valid and removes it (single use)
+func validateState(state string) bool {
+	stateMu.Lock()
+	defer stateMu.Unlock()
+	exp, exists := stateStore[state]
+	if !exists || time.Now().After(exp) {
+		return false
+	}
+	delete(stateStore, state) // Single use
+	return true
+}
 
 func (cluster *Cluster) oauth2Config() *oauth2.Config {
 
@@ -39,12 +84,15 @@ func (config *Config) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 func (cluster *Cluster) handleLogin(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Handling login-uri for: %s", cluster.Name)
-	authCodeURL := cluster.oauth2Config().AuthCodeURL(exampleAppState, oauth2.AccessTypeOffline)
+	// Generate secure random state for CSRF protection
+	state := generateState()
+	saveState(state)
+	authCodeURL := cluster.oauth2Config().AuthCodeURL(state, oauth2.AccessTypeOffline)
 	if cluster.Connector_ID != "" {
 		log.Printf("Using dex connector with id %#q", cluster.Connector_ID)
 		authCodeURL = fmt.Sprintf("%s&connector_id=%s", authCodeURL, cluster.Connector_ID)
 	}
-	log.Printf("Redirecting post-loginto: %s", authCodeURL)
+	log.Printf("Redirecting post-login to: %s", authCodeURL)
 	http.Redirect(w, r, authCodeURL, http.StatusSeeOther)
 }
 
@@ -76,9 +124,9 @@ func (cluster *Cluster) handleCallback(w http.ResponseWriter, r *http.Request) {
 			log.Printf("handleCallback: no code in request: %q", r.Form)
 			return
 		}
-		if state := r.FormValue("state"); state != exampleAppState {
+		if state := r.FormValue("state"); !validateState(state) {
 			cluster.renderHTMLError(w, userErrorMsg, http.StatusBadRequest)
-			log.Printf("handleCallback: expected state %q got %q", exampleAppState, state)
+			log.Printf("handleCallback: invalid or expired state parameter")
 			return
 		}
 		token, err = oauth2Config.Exchange(ctx, code)
@@ -110,7 +158,7 @@ func (cluster *Cluster) handleCallback(w http.ResponseWriter, r *http.Request) {
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		cluster.renderHTMLError(w, userErrorMsg, http.StatusBadRequest)
-		log.Printf("handleCallback: no id_token in response: %q", token)
+		log.Printf("handleCallback: no id_token in response: %v", token)
 		return
 	}
 
@@ -138,7 +186,7 @@ func (cluster *Cluster) handleCallback(w http.ResponseWriter, r *http.Request) {
 	if cluster.Config.IDP_Ca_Pem != "" {
 		IdpCaPem = cluster.Config.IDP_Ca_Pem
 	} else if cluster.Config.IDP_Ca_Pem_File != "" {
-		content, err := ioutil.ReadFile(cluster.Config.IDP_Ca_Pem_File)
+		content, err := os.ReadFile(cluster.Config.IDP_Ca_Pem_File)
 		if err != nil {
 			log.Fatalf("Failed to load CA from file %s, %s", cluster.Config.IDP_Ca_Pem_File, err)
 		}
