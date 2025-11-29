@@ -74,7 +74,7 @@ func (d debugTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	respDump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return nil, err
 	}
 	log.Printf("%s", respDump)
@@ -129,7 +129,7 @@ func substituteEnvVars(text string) string {
 	matches := re.FindAllStringSubmatch(text, -1)
 	for _, val := range matches {
 		envVar := os.Getenv(val[1])
-		text = strings.Replace(text, val[0], envVar, -1)
+		text = strings.ReplaceAll(text, val[0], envVar)
 	}
 	return text
 }
