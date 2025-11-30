@@ -1,0 +1,67 @@
+{{ define "macos-install" }}
+
+<div class="install-section">
+  <h4>1. Install kubectl</h4>
+  <div class="install-methods">
+    <div class="install-method">
+      <span class="method-badge recommended">homebrew</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>brew install kubectl</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">binary (Apple Silicon)</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">binary (Intel)</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ if .UseKubelogin }}
+<div class="install-section">
+  <h4>2. Install kubelogin</h4>
+  <div class="install-methods">
+    <div class="install-method">
+      <span class="method-badge recommended">homebrew</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>brew install kubelogin</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">krew</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>kubectl krew install oidc-login</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">binary (Apple Silicon)</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>curl -LO https://github.com/int128/kubelogin/releases/latest/download/kubelogin_darwin_arm64.zip && unzip kubelogin_darwin_arm64.zip && chmod +x kubelogin && sudo mv kubelogin /usr/local/bin/kubectl-oidc_login</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+<div class="install-section">
+  <h4>{{ if .UseKubelogin }}3{{ else }}2{{ end }}. Verify Installation</h4>
+  <div class="command">
+    <button class="btn" data-clipboard-snippet="">Copy</button>
+    <pre><code>kubectl version --client{{ if .UseKubelogin }} && kubectl oidc-login --version{{ end }}</code></pre>
+  </div>
+</div>
+
+{{ end }}

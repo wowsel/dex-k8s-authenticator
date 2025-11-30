@@ -1,0 +1,70 @@
+{{ define "windows-install" }}
+
+<div class="install-section">
+  <h4>1. Install kubectl</h4>
+  <div class="install-methods">
+    <div class="install-method">
+      <span class="method-badge recommended">chocolatey</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>choco install kubernetes-cli</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">scoop</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>scoop install kubectl</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">winget</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>winget install -e --id Kubernetes.kubectl</code></pre>
+      </div>
+    </div>
+  </div>
+  <p class="note">Or download from <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/" target="_blank">kubernetes.io</a></p>
+</div>
+
+{{ if .UseKubelogin }}
+<div class="install-section">
+  <h4>2. Install kubelogin</h4>
+  <div class="install-methods">
+    <div class="install-method">
+      <span class="method-badge recommended">chocolatey</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>choco install kubelogin</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">scoop</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>scoop install kubelogin</code></pre>
+      </div>
+    </div>
+    <div class="install-method">
+      <span class="method-badge">krew</span>
+      <div class="command">
+        <button class="btn" data-clipboard-snippet="">Copy</button>
+        <pre><code>kubectl krew install oidc-login</code></pre>
+      </div>
+    </div>
+  </div>
+  <p class="note">Or download from <a href="https://github.com/int128/kubelogin/releases" target="_blank">GitHub</a> and rename to <code>kubectl-oidc_login.exe</code></p>
+</div>
+{{ end }}
+
+<div class="install-section">
+  <h4>{{ if .UseKubelogin }}3{{ else }}2{{ end }}. Verify Installation</h4>
+  <div class="command">
+    <button class="btn" data-clipboard-snippet="">Copy</button>
+    <pre><code>kubectl version --client{{ if .UseKubelogin }}
+kubectl oidc-login --version{{ end }}</code></pre>
+  </div>
+</div>
+
+{{ end }}

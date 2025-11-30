@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,8 +12,15 @@ import (
 	"strings"
 )
 
+// Template functions
+var templateFuncs = template.FuncMap{
+	"base64encode": func(s string) string {
+		return base64.StdEncoding.EncodeToString([]byte(s))
+	},
+}
+
 // compile all templates and cache them
-var templates = template.Must(template.ParseGlob("./templates/*.html"))
+var templates = template.Must(template.New("").Funcs(templateFuncs).ParseGlob("./templates/*.html"))
 
 func renderIndex(w http.ResponseWriter, config *Config) {
 	t, _ := template.ParseFiles("./templates/index.html")

@@ -522,7 +522,279 @@ div.command .btn {
   color: var(--color-text-secondary);
 }
 
+/* ==================== KUBECONFIG DISPLAY ==================== */
+.kubeconfig-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.kubeconfig-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.kubeconfig-header h3 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.kubeconfig-header p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.kubeconfig-box {
+  position: relative;
+  background-color: var(--color-code-bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.kubeconfig-box pre {
+  margin: 0;
+  padding: var(--spacing-lg);
+  padding-top: calc(var(--spacing-lg) + 40px);
+  max-height: 500px;
+  overflow-y: auto;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.copy-full-btn {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary);
+  border: none;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 10;
+}
+
+.copy-full-btn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.copy-full-btn.copied {
+  background-color: var(--color-success);
+}
+
+/* Usage cards */
+.usage-section {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.usage-section h4 {
+  margin-bottom: var(--spacing-md);
+  font-size: 1rem;
+}
+
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.usage-card {
+  padding: var(--spacing-md);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.usage-icon {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.usage-card h5 {
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text);
+}
+
+.usage-card p {
+  font-size: 0.8125rem;
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.usage-card code {
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+}
+
+/* Advanced/collapsible sections */
+.advanced-section {
+  margin-top: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.advanced-section summary {
+  padding: var(--spacing-md);
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.advanced-section summary:hover {
+  background-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.advanced-section[open] summary {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.advanced-section > p,
+.advanced-section > div {
+  padding: var(--spacing-md);
+}
+
+.advanced-section > p {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+/* OS tabs (nested) */
+.os-tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-xs);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.os-tab {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.os-tab:hover {
+  background-color: var(--color-bg-card);
+  color: var(--color-text);
+}
+
+.os-tab.active {
+  background-color: var(--color-bg-card);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.os-content {
+  display: none;
+}
+
+/* Install sections */
+.install-section {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.install-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.install-section h4 {
+  font-size: 1rem;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text);
+}
+
+.install-methods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.install-method {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.method-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 80px;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.method-badge.recommended {
+  background-color: var(--color-success-light);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.install-method .command {
+  flex: 1;
+  margin: 0;
+}
+
+.install-method .command pre {
+  padding: var(--spacing-sm) var(--spacing-md);
+  padding-right: calc(var(--spacing-md) + 60px);
+  font-size: 0.8125rem;
+}
+
+.note {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-sm);
+}
+
 /* Responsive */
+@media (max-width: 768px) {
+  .install-method {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .method-badge {
+    align-self: flex-start;
+  }
+  
+  .usage-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .os-tabs {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 640px) {
   .auth-method-selector {
     flex-direction: column;
@@ -543,6 +815,12 @@ div.command .btn {
   .theme-panel {
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
+  }
+  
+  .kubeconfig-box pre {
+    padding: var(--spacing-md);
+    padding-top: calc(var(--spacing-md) + 50px);
+    font-size: 0.75rem;
   }
 }
 
