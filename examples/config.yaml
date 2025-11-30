@@ -44,6 +44,22 @@ clusters:
     #   ...
     #   -----END CERTIFICATE-----
 
+    # Enable kubelogin (exec credential plugin) instead of legacy auth-provider
+    # When enabled, users will need to install kubelogin: https://github.com/int128/kubelogin
+    # Benefits: automatic token refresh, browser-based auth, token caching
+    # use_kubelogin: true
+
+  # Example cluster with kubelogin enabled
+  # - name: production-kubelogin
+  #   short_description: "Production (kubelogin)"
+  #   description: "Production cluster using kubelogin for authentication"
+  #   use_kubelogin: true
+  #   redirect_uri: http://127.0.0.1:5555/callback/production-kubelogin
+  #   client_secret: your-client-secret
+  #   client_id: production-client-id
+  #   issuer: http://127.0.0.1:5556
+  #   k8s_master_uri: https://production-k8s.example.com:6443
+
 # Specify multiple extra root CA files to be loaded
 # trusted_root_ca:
 #   -|

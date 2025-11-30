@@ -98,6 +98,7 @@ type Cluster struct {
 	K8s_Ca_Pem_Base64_Encoded string
 	Static_Context_Name       bool
 	Scopes                    []string
+	Use_Kubelogin             bool // Enable kubelogin (exec credential plugin) instead of legacy auth-provider
 
 	Verifier       *oidc.IDTokenVerifier
 	Provider       *oidc.Provider

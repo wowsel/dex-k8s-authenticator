@@ -44,6 +44,8 @@ type templateData struct {
 	StaticContextName bool
 	KubectlVersion    string
 	Namespace         string
+	UseKubelogin      bool
+	Scopes            []string
 }
 
 func (cluster *Cluster) renderToken(w http.ResponseWriter,
@@ -88,7 +90,9 @@ func (cluster *Cluster) renderToken(w http.ResponseWriter,
 		Web_Path_Prefix:   webPathPrefix,
 		StaticContextName: cluster.Static_Context_Name,
 		Namespace:         cluster.Namespace,
-		KubectlVersion:    kubectlVersion}
+		KubectlVersion:    kubectlVersion,
+		UseKubelogin:      cluster.Use_Kubelogin,
+		Scopes:            cluster.Scopes}
 
 	if err := templates.ExecuteTemplate(w, "kubeconfig.html", token_data); err != nil {
 		log.Println(err)

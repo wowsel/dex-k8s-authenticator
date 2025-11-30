@@ -1,18 +1,75 @@
 {{ define "mac-tab-content" }}
-  <h3>Install and Set Up kubectl</h3>
-  <div>
-  See 
-  <a title="Install and setup kubectl" href="https://kubernetes.io/docs/tasks/tools/install-kubectl/">
-    https://kubernetes.io/docs/tasks/tools/install-kubectl
-  </a>
-  {{ if .KubectlVersion }}
-  <p>
-  Download kubectl:
-  <a title="Download kubectl" href="https://storage.googleapis.com/kubernetes-release/release/{{.KubectlVersion}}/bin/darwin/amd64/kubectl">
-    https://storage.googleapis.com/kubernetes-release/release/{{.KubectlVersion}}/bin/darwin/amd64/kubectl
-  </a>
-  </p>
-  {{ end }}
+
+  {{ if .UseKubelogin }}
+  <div class="info-box warning">
+    <div class="info-box-icon">!</div>
+    <div class="info-box-content">
+      <h4>Prerequisites: kubectl + kubelogin</h4>
+      <p>You need both kubectl and kubelogin installed. Follow the instructions below.</p>
+    </div>
   </div>
+
+  <div class="step-header">
+    <span class="step-number">0</span>
+    <h3>Install Required Tools</h3>
+  </div>
+
+  <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Install kubectl</h4>
+  <p>The easiest way on macOS is via Homebrew:</p>
+  <div class="command">
+    <button class="btn" data-clipboard-snippet="">Copy</button>
+    <pre><code>brew install kubectl</code></pre>
+  </div>
+  <p style="margin-top: 0.5rem;">Or see <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/" target="_blank">official documentation</a>.</p>
+
+  <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Install kubelogin</h4>
+  <p>Choose one of these methods:</p>
+  
+  <div class="install-grid">
+    <div class="install-option">
+      <h5>Homebrew (Recommended)</h5>
+      <code>brew install kubelogin</code>
+    </div>
+    <div class="install-option">
+      <h5>Krew</h5>
+      <code>kubectl krew install oidc-login</code>
+    </div>
+    <div class="install-option">
+      <h5>Go Install</h5>
+      <code>go install github.com/int128/kubelogin@latest</code>
+    </div>
+  </div>
+
+  <p>Or download from <a href="https://github.com/int128/kubelogin/releases" target="_blank">GitHub Releases</a>:</p>
+  <div class="command">
+    <button class="btn" data-clipboard-snippet="">Copy</button>
+    <pre><code># For Apple Silicon (M1/M2/M3)
+curl -LO https://github.com/int128/kubelogin/releases/latest/download/kubelogin_darwin_arm64.zip &amp;&amp; \
+unzip kubelogin_darwin_arm64.zip &amp;&amp; \
+chmod +x kubelogin &amp;&amp; \
+sudo mv kubelogin /usr/local/bin/kubectl-oidc_login</code></pre>
+  </div>
+  <div class="command">
+    <button class="btn" data-clipboard-snippet="">Copy</button>
+    <pre><code># For Intel Mac
+curl -LO https://github.com/int128/kubelogin/releases/latest/download/kubelogin_darwin_amd64.zip &amp;&amp; \
+unzip kubelogin_darwin_amd64.zip &amp;&amp; \
+chmod +x kubelogin &amp;&amp; \
+sudo mv kubelogin /usr/local/bin/kubectl-oidc_login</code></pre>
+  </div>
+
+  {{ else }}
+  <div class="step-header">
+    <span class="step-number">0</span>
+    <h3>Install kubectl</h3>
+  </div>
+  <p>The easiest way on macOS is via Homebrew:</p>
+  <div class="command">
+    <button class="btn" data-clipboard-snippet="">Copy</button>
+    <pre><code>brew install kubectl</code></pre>
+  </div>
+  <p style="margin-top: 0.5rem;">Or see <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/" target="_blank">official documentation</a>{{ if .KubectlVersion }} or <a href="https://storage.googleapis.com/kubernetes-release/release/{{ .KubectlVersion }}/bin/darwin/amd64/kubectl" target="_blank">download v{{ .KubectlVersion }}</a>{{ end }}.</p>
+  {{ end }}
+
   {{ template "linux-mac-common" . }}
 {{ end }}

@@ -21,6 +21,7 @@ An example configuration is available [here](../examples/config.yaml)
 | k8s_ca_pem_base64_encoded | no       | cluster | The Base64 encoded CA for your k8s server (used in generating instructions)           |
 | k8s_ca_pem_file           | no       | cluster | The CA file for your k8s server (used in generating instructions)                     |
 | scopes                    | no       | cluster | A list OpenID scopes to request                                                       |
+| use_kubelogin             | no       | cluster | Enable kubelogin (exec credential plugin) instead of legacy auth-provider mode        |
 | tls_cert                  | no       | root    | Path to TLS cert if SSL enabled                                                       |
 | tls_key                   | no       | root    | Path to TLS key if SSL enabled                                                        |
 | idp_ca_uri                | no       | root    | A url pointing to the CA for generating 'idp-certificate-authority' in the kubeconfig |
@@ -81,3 +82,59 @@ Don't forget to update the Dex `staticClients.redirectURIs` value to include the
 The `dex-k8s-authenticator` helm charts support this via the `dexK8sAuthenticator.web_path_prefix` and `ingress.path` options. You typically set these to the same value.
 
 Note that the health-checks are configured automatically.
+
+## Kubelogin Support
+
+[kubelogin](https://github.com/int128/kubelogin) is a kubectl plugin for Kubernetes OpenID Connect (OIDC) authentication. It provides a more modern and user-friendly authentication experience compared to the legacy `--auth-provider` method.
+
+### Benefits of kubelogin
+
+- **Automatic token refresh**: kubelogin handles token refresh automatically
+- **Browser-based authentication**: Opens a browser for login when tokens expire
+- **Token caching**: Tokens are cached locally, reducing the need for repeated logins
+- **No embedded tokens**: Tokens are not stored in kubeconfig (more secure)
+
+### Enabling kubelogin
+
+To enable kubelogin for a cluster, set `use_kubelogin: true`:
+
+```yaml
+clusters:
+  - name: production
+    short_description: "Production Cluster"
+    description: "Production Kubernetes Cluster with kubelogin"
+    use_kubelogin: true  # Enable kubelogin
+    client_secret: your-client-secret
+    client_id: your-client-id
+    issuer: https://dex.example.com
+    redirect_uri: http://127.0.0.1:5555/callback/production
+    k8s_master_uri: https://k8s-api.example.com:6443
+```
+
+### User Requirements
+
+When kubelogin is enabled, users must install:
+
+1. **kubectl** - The Kubernetes CLI
+2. **kubelogin** - Can be installed via:
+   - Homebrew: `brew install kubelogin`
+   - Krew: `kubectl krew install oidc-login`
+   - Chocolatey (Windows): `choco install kubelogin`
+   - Direct download from [GitHub Releases](https://github.com/int128/kubelogin/releases)
+
+The generated kubeconfig will use the `exec` credential plugin format:
+
+```yaml
+users:
+- name: user-production
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: kubectl
+      args:
+      - oidc-login
+      - get-token
+      - --oidc-issuer-url=https://dex.example.com
+      - --oidc-client-id=your-client-id
+      - --oidc-client-secret=your-client-secret
+```
